@@ -1,5 +1,7 @@
 import os
 import itertools
+import colorama
+
 
 class Extensions : 
     @staticmethod
@@ -19,9 +21,9 @@ class Extensions :
 class PacakgeService : 
 
     def ComparePackages (self) : 
-        commandList = os.popen('pip list', 'r').read().split("\n")
-        system_packages = self.__fixed_name_of_packages(itertools.islice(commandList, 2 , None))
         
+        system_packages = self.__systemPackages()
+
         requirements_packages = []
         file_location = f'{os.getcwd()}/requirements.txt'
         
@@ -36,15 +38,25 @@ class PacakgeService :
                 packages_should_install_count = 0 
 
                 for package in requirements_packages : 
-                    if package not in system_packages : 
-                        print (f'install ({package}) package')
+                    if package not in system_packages:
+                        print(colorama.Fore.RED + f'install ({package}) package')
                         packages_should_install_count += 1
-
-                print (f'scannig is done ! you have to install {packages_should_install_count} packages')
+                    
+                print (colorama.Fore.BLUE + f'scannig is done ! you have to install {packages_should_install_count} packages')
 
         except FileNotFoundError : 
-            print ('requirements file dosent exists !')
+            print (colorama.Fore.RED + 'requirements file dosent exists !')
 
+    def ComparePackagesWithSpecialPackageName (self , packageName) : 
+        system_packages = self.__systemPackages()
+        system_packages = list(map(lambda item: item['package'], system_packages))
+
+        if packageName not in system_packages :
+            print (colorama.Fore.RED + f'install ({packageName}) package')
+
+    def __systemPackages (self) :
+        commandList = os.popen('pip list', 'r').read().split("\n")
+        return self.__fixed_name_of_packages(itertools.islice(commandList, 2 , None))
 
     def __fixed_name_of_packages (self ,list_arg : list) : 
 
@@ -56,19 +68,30 @@ class PacakgeService :
 
             try : 
                 items = text.split(" ")
-
+                
                 if len(items) == 2 :
-                    return_list.append({'version' : items[1] , 'packages' : items[0]})
+                    return_list.append({'version' : items[1] , 'package' : items[0]})
             except : 
                 pass
 
         return return_list
-        
+   
 
 def main () :
+    
+    packageName = input("Enter The Package Name If You Want Scanning All Packages Click Enter : ")
+
     service = PacakgeService()
-    service.ComparePackages()
+
+    if packageName == "" or packageName == " " : 
+        service.ComparePackages()
+    else : 
+        service.ComparePackagesWithSpecialPackageName(packageName)
+    
+    print (colorama.Fore.GREEN + 'Operation successful !')
 
 
 if __name__ == '__main__': 
+    colorama.init()
     main () 
+    colorama.deinit()
